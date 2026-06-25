@@ -1,0 +1,40 @@
+# --- Universal ignores for docker build context ---
+.git
+.gitignore
+.github
+.dockerignore
+Dockerfile
+docker-compose.yml
+docker-compose.*.yml
+README.md
+RENDER_DEPLOY_GUIDE.md
+*.md
+.env
+.env.*
+.vscode
+.idea
+
+# --- Frontend ---
+**/node_modules
+**/build
+**/.cache
+**/coverage
+**/yarn-error.log
+**/npm-debug.log*
+
+# --- Backend ---
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/.pytest_cache
+**/.mypy_cache
+**/.venv
+**/venv
+**/.coverage
+**/htmlcov
+
+# --- Misc ---
+**/tests/__pycache__
+**/test_reports
+**/.DS_Store
+**/Thumbs.db
