@@ -1,0 +1,67 @@
+# BudgetWise — Multi-service local stack
+# Usage:  docker-compose up --build
+# Stops:  docker-compose down  (add -v to wipe the MongoDB volume)
+version: "3.9"
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: budgetwise-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - budgetwise-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ping:1}).ok"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: budgetwise-backend
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      MONGO_URL: ${MONGO_URL:-mongodb://mongodb:27017}
+      DB_NAME: ${DB_NAME:-budgetwise_db}
+      JWT_SECRET: ${JWT_SECRET:-change_me_in_production_to_a_secure_random_string}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+    ports:
+      - "8001:8001"
+    networks:
+      - budgetwise-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_BACKEND_URL: ${REACT_APP_BACKEND_URL:-http://localhost:8001}
+    container_name: budgetwise-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+    networks:
+      - budgetwise-net
+
+networks:
+  budgetwise-net:
+    driver: bridge
+
+volumes:
+  mongo_data:
+    driver: local
